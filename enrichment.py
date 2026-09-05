@@ -420,8 +420,8 @@ class Zksnarkgroth16verifierEnrichmentSuite:
         self.zkproofaggregationfo = ZkProofAggregationForBatchVerificationEngine()
         self.formalsecurityproofd = FormalSecurityProofDocumentationKnowledgeSoundnessZeroknowledgeEngine()
         self.nistcompliancecertif = NistComplianceCertificationChecklistWithTestVectorValidationEngine()
-        self.additionalenhancemen = AdditionalEnhancementCircuitAnalysisAndOptimizationEngine()
-        self.additionalenhancemen = AdditionalEnhancementTrustedSetupCeremonyToolsEngine()
+        self.circuitanalysis = AdditionalEnhancementCircuitAnalysisAndOptimizationEngine()
+        self.trustedsetup = AdditionalEnhancementTrustedSetupCeremonyToolsEngine()
 
     def execute_all(self, primary_val: float = 1.5, secondary_val: float = 0.5) -> Dict[str, Any]:
         results = {}
@@ -431,8 +431,8 @@ class Zksnarkgroth16verifierEnrichmentSuite:
         results["ZkProofAggregationForBatchVerificationEngine"] = self.zkproofaggregationfo.evaluate(primary_val, secondary_val)
         results["FormalSecurityProofDocumentationKnowledgeSoundnessZeroknowledgeEngine"] = self.formalsecurityproofd.evaluate(primary_val, secondary_val)
         results["NistComplianceCertificationChecklistWithTestVectorValidationEngine"] = self.nistcompliancecertif.evaluate(primary_val, secondary_val)
-        results["AdditionalEnhancementCircuitAnalysisAndOptimizationEngine"] = self.additionalenhancemen.evaluate(primary_val, secondary_val)
-        results["AdditionalEnhancementTrustedSetupCeremonyToolsEngine"] = self.additionalenhancemen.evaluate(primary_val, secondary_val)
+        results["AdditionalEnhancementCircuitAnalysisAndOptimizationEngine"] = self.circuitanalysis.evaluate(primary_val, secondary_val)
+        results["AdditionalEnhancementTrustedSetupCeremonyToolsEngine"] = self.trustedsetup.evaluate(primary_val, secondary_val)
         return results
 
 # Global instance
