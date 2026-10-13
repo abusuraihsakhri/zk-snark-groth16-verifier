@@ -1,236 +1,212 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zk Snark Groth16 Verifier — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Groth16 Equation Simulator · Educational Demo</title>
+  <style>
+    :root {color-scheme:dark;--bg:#0a1020;--surface:#121d32;--edge:#31405b;--text:#eff5ff;--muted:#b9c7da;--blue:#79b8ff;--good:#6ee7b7;--bad:#fca5a5}
+    * {box-sizing:border-box}
+    body {margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+    main {max-width:1120px;margin:0 auto;padding:30px 22px 48px}
+    header {margin-bottom:24px}
+    .eyebrow {font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:700}
+    h1 {font-size:clamp(1.65rem,3.8vw,2.5rem);line-height:1.18;margin:7px 0 11px}
+    h2 {font-size:1.14rem;margin:0 0 9px}
+    p {margin:0 0 12px;color:var(--muted)}
+    a {color:var(--blue)}
+    .notice {border:1px solid #a17e43;background:#2c271d;padding:13px 16px;border-radius:10px;color:#ffe2aa;margin:16px 0 0}
+    .layout {display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+    .panel {border:1px solid var(--edge);background:var(--surface);border-radius:15px;padding:22px;min-width:0}
+    .panel p {font-size:.88rem}
+    label {display:block;font-size:.87rem;font-weight:650;margin:14px 0 6px}
+    input,textarea {display:block;width:100%;border:1px solid #566784;border-radius:8px;background:#091425;color:var(--text);padding:11px 12px;font:inherit;outline-offset:3px}
+    textarea {min-height:90px;resize:vertical;font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+    input:focus-visible,textarea:focus-visible,button:focus-visible {outline:2px solid var(--blue);outline-offset:2px}
+    input[type=checkbox] {display:inline-block;width:auto;accent-color:var(--blue);margin:0 7px 0 0}
+    .check {display:flex;align-items:center;gap:4px;font-weight:500;margin:15px 0}
+    .pair {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions {display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    button {border:1px solid #9cc9ff;border-radius:8px;padding:10px 14px;background:#2261af;color:white;font-weight:700;cursor:pointer}
+    button.secondary {background:transparent;color:#d8e9ff;border-color:#667c9c}
+    button:hover {filter:brightness(1.13)}
+    .out {grid-column:1/-1}
+    .out-head {display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    pre {white-space:pre-wrap;overflow-wrap:anywhere;max-height:400px;overflow:auto;padding:17px;background:#070f1e;border-radius:9px;border:1px solid var(--edge);font:13px/1.6 ui-monospace,monospace;margin:10px 0 0}
+    .status {font-weight:700;min-height:1.6em;margin:8px 0}
+    .muted {color:var(--muted)} .good {color:var(--good)} .bad {color:var(--bad)}
+    footer {color:var(--muted);font-size:.81rem;margin-top:22px}
+    @media (max-width:760px) {.layout {grid-template-columns:1fr}.panel {padding:18px}.pair {grid-template-columns:1fr}main {padding:20px 13px 35px}}
+  </style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Zk Snark Groth16 Verifier</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Zk Snark Groth16 Verifier Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "zk-snark-groth16-verifier",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+<main>
+  <header>
+    <div class="eyebrow">Local, browser-based demonstration</div>
+    <h1>Groth16 pairing-equation simulator</h1>
+    <p>Explore a toy modular-exponentiation identity and an independent threshold-based audit. Everything runs in this browser tab without an API or Python runtime.</p>
+    <div class="notice"><strong>Not cryptographic verification.</strong> This model uses <code>2^(a·b) mod p</code>, not elliptic-curve pairings, R1CS constraints, or a real Groth16 proving system. A passing result proves only that the toy arithmetic identity matches. Do not use it to authenticate proofs, verify compliance, or protect sensitive data.</div>
+  </header>
+  <div class="layout">
+    <section class="panel" aria-labelledby="proof-title">
+      <h2 id="proof-title">Proof equation</h2>
+      <p>Checks e(A,B) = e(α,β) × e(L,γ) × e(C,δ), with L = IC[0] + Σ(xᵢ · IC[i+1]) mod p.</p>
+      <label for="vk">Verification key (JSON)</label>
+      <textarea id="vk" spellcheck="false">{"alpha":7,"beta":11,"gamma":5,"delta":3,"ic":[2,4],"mod":104729}</textarea>
+      <label for="proof">Proof elements (JSON)</label>
+      <textarea id="proof" spellcheck="false">{"a":7,"b":11,"c":34626}</textarea>
+      <label for="inputs">Public inputs (JSON array)</label>
+      <input id="inputs" spellcheck="false" value="[42]">
+      <div class="actions">
+        <button type="button" id="verify">Verify toy equation</button>
+        <button type="button" id="tamper" class="secondary">Alter public input</button>
+        <button type="button" id="reset" class="secondary">Reset example</button>
+      </div>
+    </section>
+    <section class="panel" aria-labelledby="audit-title">
+      <h2 id="audit-title">Threshold audit demonstration</h2>
+      <p>Separate, deterministic classification rules from the Python audit engine. No proof verification and no signed ledger.</p>
+      <label for="task">Task identifier</label>
+      <input id="task" maxlength="80" value="DEMO-001">
+      <div class="pair">
+        <div><label for="primary">Primary metric</label><input id="primary" type="number" step="any" value="29.4"></div>
+        <div><label for="secondary">Secondary metric</label><input id="secondary" type="number" step="any" value="14.8"></div>
+      </div>
+      <label for="descriptor">Status descriptor</label>
+      <input id="descriptor" value="DISCORDANT_ANOMALY" maxlength="200">
+      <label class="check" for="critical"><input id="critical" type="checkbox" checked> Critical flag</label>
+      <div class="actions"><button id="audit" type="button">Evaluate thresholds</button></div>
+      <p style="margin-top:18px">Rules: primary metric &gt; 25; secondary metric &gt; 12 or critical flag; descriptors containing DISCORDANT, ANOMALY, MUTANT, VIOLATION, FAIL, or REJECT.</p>
+      <p>Results are generated from the entered values, never placeholders. Do not enter patient identifiers.</p>
+    </section>
+    <section class="panel out" aria-labelledby="output-title">
+      <div class="out-head">
+        <h2 id="output-title">Calculation result</h2>
+        <button id="download" type="button" class="secondary" disabled>Save result JSON</button>
+      </div>
+      <div id="status" class="status muted" role="status" aria-live="polite">Ready. Select a calculation above.</div>
+      <pre id="output" aria-label="Result JSON">{}</pre>
+    </section>
+  </div>
+  <footer>Educational project · Calculations and downloads are local to your device. No data is sent to a server by this page. <a href="https://github.com/abusuraihsakhri/zk-snark-groth16-verifier">Source repository</a>.</footer>
+</main>
+<script>
+"use strict";
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let lastResult = null;
+  function show(result, status, success) {
+    lastResult = result;
+    $("output").textContent = JSON.stringify(result, null, 2);
+    $("status").textContent = status;
+    $("status").className = "status " + (success ? "good" : "bad");
+    $("download").disabled = false;
+  }
+  function fail(error) {
+    lastResult = null;
+    $("status").textContent = "Input error: " + error.message;
+    $("status").className = "status bad";
+    $("output").textContent = "{}";
+    $("download").disabled = true;
+  }
+  function safeInt(value, name) {
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error(name + " must be a nonnegative safe integer");
+    return BigInt(value);
+  }
+  function powmod(base, exponent, modulus) {
+    let result = 1n;
+    base %= modulus;
+    while (exponent > 0n) {
+      if (exponent & 1n) result = result * base % modulus;
+      base = base * base % modulus;
+      exponent >>= 1n;
+    }
+    return result;
+  }
+  function prime(n) {
+    if (n < 5 || n > 2147483647) return false;
+    for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+    return true;
+  }
+  function verifyToy() {
+    const vk = JSON.parse($("vk").value);
+    const proof = JSON.parse($("proof").value);
+    const inputs = JSON.parse($("inputs").value);
+    if (!vk || typeof vk !== "object" || !proof || typeof proof !== "object" || !Array.isArray(inputs) || !Array.isArray(vk.ic)) {
+      throw new Error("Expected a verification key, proof object, and public-input array");
+    }
+    const modNumber = vk.mod;
+    if (!Number.isSafeInteger(modNumber) || !prime(modNumber)) throw new Error("Use a prime modulus between 5 and 2,147,483,647");
+    if (vk.ic.length !== inputs.length + 1) throw new Error("IC length must equal public-input count + 1");
+    const p = BigInt(modNumber);
+    const keys = ["alpha", "beta", "gamma", "delta"];
+    const k = keys.map((name) => safeInt(vk[name], name));
+    const a = safeInt(proof.a, "A");
+    const b = safeInt(proof.b, "B");
+    const c = safeInt(proof.c, "C");
+    const coeff = vk.ic.map((v, i) => safeInt(v, "IC[" + i + "]"));
+    const values = inputs.map((v, i) => safeInt(v, "public input " + i));
+    let linear = coeff[0] % p;
+    for (let i = 0; i < values.length; i++) linear = (linear + values[i] * coeff[i + 1]) % p;
+    const left = powmod(2n, a * b, p);
+    const right = powmod(2n, k[0] * k[1] + linear * k[2] + c * k[3], p);
+    const valid = left === right;
+    show({
+      model: "educational-modular-pairing-simulation", is_valid: valid,
+      modulus: modNumber, public_inputs: inputs, linear_combination: linear.toString(),
+      lhs: left.toString(), rhs: right.toString(),
+      limitation: "Not Groth16 cryptographic proof verification"
+    }, valid ? "Toy equation satisfied (not a cryptographic proof)" : "Toy equation does not match", valid);
+  }
+  function runAudit() {
+    const primary = Number($("primary").value);
+    const secondary = Number($("secondary").value);
+    if (!$("primary").value.trim() || $("secondary").value.trim() === "" || !Number.isFinite(primary) || !Number.isFinite(secondary)) {
+      throw new Error("Both metrics must be finite numbers");
+    }
+    const task = $("task").value.trim();
+    if (!task) throw new Error("Task identifier is required");
+    const desc = $("descriptor").value;
+    const critical = $("critical").checked;
+    const alerts = [];
+    if (primary > 25) alerts.push({origin_agent:"R1CSConstraintAuditorAgent",severity:"ELEVATED_RISK_WARNING",summary:"Primary metric exceeds 25"});
+    if (critical || secondary > 12) alerts.push({origin_agent:"QAPPinVerificationAgent",severity:critical ? "CRITICAL_INTERVENTION_REQUIRED" : "ELEVATED_RISK_WARNING",summary:"Secondary threshold or critical flag triggered"});
+    if (["DISCORDANT","ANOMALY","MUTANT","VIOLATION","FAIL","REJECT"].some((word) => desc.toUpperCase().includes(word))) {
+      alerts.push({origin_agent:"BilinearPairingVerifierAgent",severity:"ELEVATED_RISK_WARNING",summary:"Anomaly keyword detected"});
+    }
+    const criticalCount = alerts.filter((a) => a.severity === "CRITICAL_INTERVENTION_REQUIRED").length;
+    const status = criticalCount ? "CRITICAL_INTERVENTION_REQUIRED" : alerts.length ? "ELEVATED_RISK_WARNING" : "NOMINAL_OPTIMAL";
+    show({
+      model:"local-threshold-audit-demonstration", task_id:task,
+      primary_metric:primary, secondary_metric:secondary, status_descriptor:desc,
+      is_critical_flag:critical, overall_status:status,
+      total_alerts:alerts.length, critical_count:criticalCount, alerts:alerts,
+      limitation:"Not a cryptographic, clinical, or regulatory compliance audit"
+    }, "Audit classification: " + status, criticalCount === 0 && alerts.length === 0);
+  }
+  $("verify").addEventListener("click", function () { try { verifyToy(); } catch (e) { fail(e); } });
+  $("audit").addEventListener("click", function () { try { runAudit(); } catch (e) { fail(e); } });
+  $("tamper").addEventListener("click", function () { $("inputs").value = "[43]"; try { verifyToy(); } catch (e) { fail(e); } });
+  $("reset").addEventListener("click", function () {
+    $("vk").value = '{"alpha":7,"beta":11,"gamma":5,"delta":3,"ic":[2,4],"mod":104729}';
+    $("proof").value = '{"a":7,"b":11,"c":34626}';
+    $("inputs").value = "[42]";
+    try { verifyToy(); } catch (e) { fail(e); }
+  });
+  $("download").addEventListener("click", function () {
+    if (!lastResult) return;
+    const blob = new Blob([JSON.stringify(lastResult, null, 2) + "\n"], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "groth16-demo-result.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+})();
+</script>
 </body>
 </html>
