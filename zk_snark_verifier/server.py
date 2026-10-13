@@ -1,9 +1,9 @@
-"""
-FastAPI REST API Server for Groth16 Zero-Knowledge SNARK Verification Engine & R1CS Circuit Auditor.
-"""
-from typing import Dict, Any
-from .models import FrontierPayload
+"""FastAPI interface for threshold audits and the standalone educational web page."""
+from pathlib import Path
+from typing import Any, Dict
+
 from .agents import ZKSNARKCoordinator
+from .models import FrontierPayload
 
 coordinator = ZKSNARKCoordinator()
 
@@ -11,47 +11,43 @@ coordinator = ZKSNARKCoordinator()
 def create_app():
     try:
         from fastapi import FastAPI
-        from pydantic import BaseModel
+        from fastapi.staticfiles import StaticFiles
+        from pydantic import BaseModel, Field
+    except ImportError as exc:
+        raise RuntimeError("Install server extras: pip install -e '.[server]'") from exc
 
-        app = FastAPI(
-            title="Groth16 Zero-Knowledge SNARK Verification Engine & R1CS Circuit Auditor",
-            description="Evaluates Rank-1 Constraint Systems (R1CS), Quadratic Arithmetic Programs (QAP), and verifies Groth16 pairings on elliptic curves without revealing witness inputs.",
-            version="2.0.0-FRONTIER",
-        )
+    app = FastAPI(
+        title="Groth16 Educational Simulator and Threshold Audit",
+        description="Threshold-based audit API; not a real Groth16 cryptographic verifier.",
+        version="2.0.0",
+    )
 
-        class TaskRequest(BaseModel):
-            task_id: str = "TASK-2026-001"
-            target_identifier: str = "TARGET-BIO-KEY"
-            primary_metric: float = 28.5
-            secondary_metric: float = 14.2
-            status_descriptor: str = "DISCORDANT_ANOMALY"
-            is_critical_flag: bool = True
-            attributes: Dict[str, Any] = {}
+    class TaskRequest(BaseModel):
+        task_id: str = "TASK-001"
+        target_identifier: str = "DEMO-TARGET"
+        primary_metric: float = Field(default=28.5, allow_inf_nan=False)
+        secondary_metric: float = Field(default=14.2, allow_inf_nan=False)
+        status_descriptor: str = "DISCORDANT_ANOMALY"
+        is_critical_flag: bool = False
+        attributes: Dict[str, Any] = Field(default_factory=dict)
 
-        class ChatRequest(BaseModel):
-            query: str
+    class ChatRequest(BaseModel):
+        query: str
 
-        @app.get("/health")
-        def health():
-            return {"status": "HEALTHY", "system": "zk-snark-groth16-verifier", "domain": "Post-Quantum Cryptography & Zero-Knowledge", "version": "2.0.0-FRONTIER"}
+    @app.get("/health")
+    def health():
+        return {"status": "HEALTHY", "system": "zk-snark-groth16-verifier", "version": "2.0.0"}
 
-        @app.post("/api/audit")
-        def api_audit(req: TaskRequest):
-            payload = FrontierPayload(
-                task_id=req.task_id,
-                target_identifier=req.target_identifier,
-                primary_metric=req.primary_metric,
-                secondary_metric=req.secondary_metric,
-                status_descriptor=req.status_descriptor,
-                is_critical_flag=req.is_critical_flag,
-                attributes=req.attributes,
-            )
-            return coordinator.process(payload)
+    @app.post("/api/audit")
+    def api_audit(req: TaskRequest):
+        return coordinator.process(FrontierPayload(**req.model_dump()))
 
-        @app.post("/api/chat")
-        def api_chat(req: ChatRequest):
-            return {"response": coordinator.query_supervisory_chat(req.query)}
+    @app.post("/api/chat")
+    def api_chat(req: ChatRequest):
+        return {"response": coordinator.query_supervisory_chat(req.query)}
 
-        return app
-    except ImportError:
-        return None
+    web_directory = Path(__file__).resolve().parent.parent / "web"
+    if (web_directory / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=str(web_directory), html=True), name="web")
+
+    return app
