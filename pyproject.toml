@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "zk-snark-groth16-verifier"
 version = "2.0.0"
-description = "Groth16 Zero-Knowledge SNARK Verification Engine & R1CS Circuit Auditor"
+description = "Educational modular-arithmetic proof-equation simulator and independent threshold audit"
 readme = "README.md"
 authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
 license = { text = "MIT" }
@@ -17,9 +17,17 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 requires-python = ">=3.9"
-dependencies = [
-    "pydantic>=2.0",
-]
+dependencies = ["pydantic>=2.0,<3"]
+
+[project.optional-dependencies]
+server = ["fastapi>=0.100,<1", "uvicorn>=0.23,<1"]
+dev = ["pytest>=7.4,<10"]
+
+[tool.setuptools]
+py-modules = ["cli", "enrichment", "simulator", "zk_snark_verifier_app"]
+
+[tool.setuptools.packages.find]
+include = ["zk_snark_verifier*", "agents*"]
 
 [project.scripts]
 zk-snark-groth16-verifier = "zk_snark_verifier.cli:main"
