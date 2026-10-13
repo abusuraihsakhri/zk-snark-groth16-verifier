@@ -4,11 +4,34 @@ Command-Line Interface for Groth16 Zero-Knowledge SNARK Verification Engine & R1
 import argparse
 import csv
 import json
+import math
 import sys
 from .models import FrontierPayload
 from .agents import ZKSNARKCoordinator
 
 coordinator = ZKSNARKCoordinator()
+
+def parse_csv_bool(value):
+    """Interpret CSV boolean text rather than Python's bool(nonempty_string)."""
+    if isinstance(value, bool):
+        return value
+    normalized = str(value or "").strip().lower()
+    if normalized in {"true", "1", "yes", "y"}:
+        return True
+    if normalized in {"false", "0", "no", "n"}:
+        return False
+    raise ValueError(f"Invalid is_critical_flag value: {value!r}")
+
+
+def parse_csv_float(value, field):
+    try:
+        number = float(value)
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"Invalid {field}: {value!r}") from exc
+    if not math.isfinite(number):
+        raise ValueError(f"{field} must be finite")
+    return number
+
 
 
 def main(argv=None):
@@ -74,16 +97,18 @@ def main(argv=None):
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
+        if not fieldnames:
+            raise ValueError("Input CSV requires a header row")
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]))
         out_rows = []
         for r in rows:
             payload = FrontierPayload(
                 task_id=r.get("task_id", "TASK-01"),
                 target_identifier=r.get("target_identifier", "TARGET-01"),
-                primary_metric=float(r.get("primary_metric", 15.0)),
-                secondary_metric=float(r.get("secondary_metric", 5.0)),
+                primary_metric=parse_csv_float(r.get("primary_metric") or 15.0, "primary_metric"),
+                secondary_metric=parse_csv_float(r.get("secondary_metric") or 5.0, "secondary_metric"),
                 status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
+                is_critical_flag=parse_csv_bool(r.get("is_critical_flag", False)),
             )
             dossier = coordinator.process(payload)
             row_dict = dict(r)

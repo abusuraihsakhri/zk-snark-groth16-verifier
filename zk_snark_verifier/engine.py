@@ -10,6 +10,7 @@ Uses only Python stdlib.
 """
 import hashlib
 import json
+import math
 import random
 from typing import List, Dict, Any, Tuple, Optional
 
@@ -24,8 +25,40 @@ def mod_pow(base: int, exp: int, mod: int) -> int:
 
 
 def mod_inverse(a: int, mod: int) -> int:
-    """Modular inverse using Fermat's little theorem (mod must be prime)."""
-    return pow(a, mod - 2, mod)
+    """Return the multiplicative inverse, rejecting non-invertible values."""
+    if type(a) is not int or type(mod) is not int or mod <= 1:
+        raise ValueError("Expected integer a and modulus greater than one")
+    if math.gcd(a, mod) != 1:
+        raise ValueError("No modular inverse exists for these inputs")
+    return pow(a, -1, mod)
+
+
+def _require_demo_prime(mod: int) -> None:
+    """Deterministic Miller-Rabin primality check for 64-bit demo moduli."""
+    if type(mod) is not int or not 5 <= mod < (1 << 64):
+        raise ValueError("Demo modulus must be an integer prime between 5 and 2**64-1")
+    for p in (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37):
+        if mod == p:
+            return
+        if mod % p == 0:
+            raise ValueError("Demo modulus must be prime")
+    d, s = mod - 1, 0
+    while not d & 1:
+        d //= 2
+        s += 1
+    for base in (2, 325, 9375, 28178, 450775, 9780504, 179526502):
+        a = base % mod
+        if a == 0:
+            continue
+        x = pow(a, d, mod)
+        if x in (1, mod - 1):
+            continue
+        for _ in range(s - 1):
+            x = x * x % mod
+            if x == mod - 1:
+                break
+        else:
+            raise ValueError("Demo modulus must be prime")
 
 
 def mod_mul(a: int, b: int, mod: int) -> int:
@@ -72,6 +105,11 @@ class VerificationKey:
 
     def __init__(self, alpha: int, beta: int, gamma: int, delta: int,
                  ic: List[int], mod: int):
+        _require_demo_prime(mod)
+        if type(ic) is not list or not ic or any(type(x) is not int for x in ic):
+            raise ValueError("IC must be a nonempty list of integers")
+        if any(type(x) is not int for x in (alpha, beta, gamma, delta)):
+            raise ValueError("Verification key parameters must be integers")
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
@@ -103,6 +141,8 @@ class Proof:
     """Groth16 proof: (A, B, C) elements."""
 
     def __init__(self, a: int, b: int, c: int):
+        if any(type(x) is not int or x < 0 for x in (a, b, c)):
+            raise ValueError("Proof elements must be nonnegative integers")
         self.a = a
         self.b = b
         self.c = c
@@ -132,6 +172,12 @@ def compute_public_input_linear_combination(public_inputs: List[int],
     Returns:
         L = IC[0] + x₁×IC[1] + x₂×IC[2] + ... + xₘ×IC[m] mod p
     """
+    if type(mod) is not int or mod <= 1:
+        raise ValueError("Modulus must be an integer greater than one")
+    if type(public_inputs) is not list or any(type(x) is not int for x in public_inputs):
+        raise ValueError("Public inputs must be a list of integers")
+    if type(ic) is not list or any(type(x) is not int for x in ic):
+        raise ValueError("IC must be a list of integers")
     if len(public_inputs) + 1 != len(ic):
         raise ValueError(
             f"IC length ({len(ic)}) must be num_public_inputs + 1 ({len(public_inputs) + 1})")
@@ -209,8 +255,13 @@ def trusted_setup(mod: int, num_public_inputs: int = 1,
     Returns:
         Tuple of (verification_key, proving_key_params)
     """
+    _require_demo_prime(mod)
+    if type(num_public_inputs) is not int or num_public_inputs < 0:
+        raise ValueError("Number of public inputs must be nonnegative")
     if secret is None:
         secret = random.randrange(2, mod - 1)
+    elif type(secret) is not int or not 2 <= secret < mod - 1:
+        raise ValueError("Secret must be an integer in the demo modulus range")
 
     # Generate toxic waste
     alpha = random.randrange(2, mod - 1)
@@ -290,6 +341,7 @@ def generate_valid_proof(public_inputs: List[int], vk: VerificationKey,
 
 def generate_invalid_proof(mod: int) -> Proof:
     """Generate a random (likely invalid) proof for testing."""
+    _require_demo_prime(mod)
     return Proof(
         random.randrange(2, mod - 1),
         random.randrange(2, mod - 1),

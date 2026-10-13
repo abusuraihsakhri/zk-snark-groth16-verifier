@@ -1,160 +1,79 @@
-# ZK SNARK Groth16 Verifier
+# Groth16 Pairing-Equation Simulator
 
-> **Domain:** Post-Quantum Cryptography & Zero-Knowledge Architecture
-> **Reference Guidelines & Standards:** `NIST FIPS 203/204/205, NIST SP 800-90B & ISO/IEC Standards`
+An educational Python and browser demonstration of a **toy Groth16-shaped verification equation**. The repository also contains a separate configurable threshold-audit workflow.
 
-<div align="center">
+**Security scope:** This code uses modular exponentiation as a substitute for real elliptic-curve pairings. It does **not** implement genuine Groth16 proof generation or verification, R1CS/QAP constraint checking, a trustworthy setup ceremony, zero-knowledge security, post-quantum cryptography, clinical validation, or regulatory compliance. A passing result means only that the toy arithmetic identity holds.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+## Browser demonstration
 
-</div>
+The standalone page is `web/index.html`; open it in a modern browser to calculate and modify toy proof examples or run local threshold checks. It works without a backend or Python. The output distinguishes arithmetic verification from a real proof, rejects malformed fields, and supports JSON export. Calculations remain local to the browser and are not sent to a remote service. **A public GitHub Pages deployment has not yet been verified.**
 
----
+## Install
 
-## What It Does
-
-**ZK SNARK Groth16 Verifier** is a simplified Groth16 Zero-Knowledge SNARK verification engine implementing modular arithmetic as a proxy for elliptic curve pairings. It provides:
-
-- **Groth16 Proof Verification:** Verifies the pairing equation `e(A, B) = e(α, β) × e(L, γ) × e(C, δ)` using simulated bilinear pairings.
-- **Trusted Setup Simulation:** Generates verification keys and proving keys for testing.
-- **R1CS/QAP Circuit Auditing:** Multi-agent evaluation framework for constraint system analysis.
-- **FastAPI REST Server:** HTTP API for remote proof verification and audit operations.
-
----
-
-## Installation
+Requires Python 3.9 or newer.
 
 ```bash
-pip install -e .
+python -m pip install -e ".[dev,server]"
+python -m pytest -q
+node tests/web-smoke.cjs   # optional: Node.js is needed for this browser-logic test
 ```
 
-For development (with test dependencies):
-```bash
-pip install -e ".[dev]"
-```
+For the Python demonstration alone, `pip install -e .` is sufficient. The `server` extra provides FastAPI and Uvicorn; `dev` provides pytest.
 
----
+## Toy proof CLI
 
-## Usage
-
-### CLI Commands
-
-#### Demo (Full Setup + Prove + Verify)
 ```bash
 python cli.py demo --public-inputs '[42]'
-python cli.py demo --public-inputs '[10, 20, 30]' --mod 104729
-```
-
-#### Trusted Setup
-```bash
 python cli.py setup --mod 104729 --num-inputs 1
-```
-
-#### Verify a Proof
-```bash
-python cli.py verify --vk '<verification-key-json>' --proof '<proof-json>' --public-inputs '[42]'
-```
-
-#### Compute Linear Combination
-```bash
-python cli.py lcomb --public-inputs '[5]' --ic '[10, 3]' --mod 104729
-```
-
-#### Simulated Pairing
-```bash
 python cli.py pairing --a 11 --b 13 --mod 104729
+python cli.py lcomb --public-inputs '[5]' --ic '[10,3]'
 ```
 
-### Audit CLI (Multi-Agent Evaluation)
+The `setup` output includes demonstration parameters and must **not** be considered a secure proving key. The `verify` command accepts JSON in `--vk`, `--proof`, and `--public-inputs`; it checks the toy equation only. Python's demonstration uses prime moduli smaller than 2⁶⁴; the browser limits them to 2,147,483,647.
+
+```python
+from zk_snark_verifier.engine import setup_and_verify
+
+result = setup_and_verify([42], num_inputs=1, mod=104729)
+print(result["verification"]["is_valid"])
+```
+
+## Threshold-audit CLI and service
+
 ```bash
-# Single task audit
-python -m zk_snark_verifier.cli audit --task-id TASK-001 --primary 35.0 --secondary 4.0 --status DISCORDANT_ANOMALY
-
-# Batch CSV processing
+python -m zk_snark_verifier.cli audit --task-id TASK-001 --primary 35 --secondary 4 --status DISCORDANT_ANOMALY
 python -m zk_snark_verifier.cli batch -i sample.csv -o results.csv
-
-# Supervisory chat
 python -m zk_snark_verifier.cli chat "What is the system status?"
-
-# Launch REST server
 python -m zk_snark_verifier.cli serve --host 127.0.0.1 --port 8000
 ```
 
-### Python API
-```python
-from zk_snark_verifier.engine import (
-    trusted_setup, generate_valid_proof, verify_proof, setup_and_verify
-)
+Visit `http://127.0.0.1:8000/` for the browser demonstration when running from the repository checkout. `GET /health`, `POST /api/audit` and `POST /api/chat` serve the independent threshold-audit workflow. `agents.api:app` is an additional experimental API.
 
-# Full demo: setup + prove + verify
-result = setup_and_verify([42], num_inputs=1, mod=104729)
-print(result["verification"]["is_valid"])  # True
-```
+The audit applies hard-coded thresholds: primary > 25, secondary > 12 or a critical flag, and selected anomaly keywords in a status descriptor. These are **illustrative rules**, not cryptographic or medical criteria. CSV values for `is_critical_flag` accept `true/false`, `1/0`, and `yes/no`.
 
----
-
-## Project Structure
-
-```
-zk_snark_verifier/
-├── engine.py      # Core Groth16 verification engine & FrontierDomainEngine
-├── models.py      # Data models (FrontierPayload, AgentTelemetryAlert)
-├── agents.py      # Multi-agent coordination (ZKSNARKCoordinator)
-├── cli.py         # Audit CLI interface
-└── server.py      # FastAPI REST server
-agents/            # Enterprise agent framework
-├── base.py        # PHI guard, HMAC-SHA256 audit trail
-├── models.py      # Pydantic schemas
-├── supervisor.py  # System supervisor orchestrator
-├── workers.py     # Domain worker agents
-├── llm_factory.py # LLM provider factory
-├── api.py         # FastAPI enterprise endpoints
-├── learning.py    # Bayesian calibration engine
-├── metrics.py     # Prometheus metrics exporter
-└── streamer.py    # WebSocket telemetry broadcaster
-tests/             # Test suite
-enrichment.py      # Enrichment feature suite
-simulator.py       # High-throughput stress testing
-```
-
----
-
-## Security
-
-* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, emails, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs. Set `AUDIT_SECRET_KEY` environment variable for persistent integrity across restarts.
-* **PHI Redaction:** `PHIGuard.redact_phi()` sanitizes outbound text.
-
----
-
-## Testing
+## Container
 
 ```bash
-# Run full test suite
-pytest -v
-
-# Run specific test files
-pytest tests/test_zk_snark_groth16_verifier.py -v
-pytest tests/test_zk_snark_verifier.py -v
-pytest tests/test_enrichment.py -v
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+docker compose up --build
 ```
 
----
+A persistent audit key must be provided by the operator. Do not commit it or include it in public web assets. The HMAC audit trail is held in memory, is not durable across restarts, and is **not** an immutable external audit ledger.
 
-## Container Deployment
+## Privacy and limitations
 
-```bash
-docker build -t zk-snark-groth16-verifier .
-docker run -p 8000:8000 -e AUDIT_SECRET_KEY=your-secret-key zk-snark-groth16-verifier
-```
+The static browser page performs local calculations and does not contact a remote API or store uploaded information. The Python service processes whatever is sent to it; deploy it only behind appropriate access controls. The separate `agents` framework contains regex-based identifier checks and an in-memory HMAC chain, but **regex checks are not comprehensive PHI de-identification**. Avoid sending patient data to this demonstration. No formal cryptographic security evaluation or external standards certification is claimed.
 
----
+## Project layout
+
+- `zk_snark_verifier/engine.py`: toy equation, input aggregation and modular arithmetic.
+- `zk_snark_verifier/cli.py`: independent metric-based audit and CSV CLI.
+- `zk_snark_verifier/server.py`: FastAPI demonstration service.
+- `agents/`: experimental worker, API, and in-memory audit support.
+- `web/index.html`: standalone local browser calculator and threshold demo.
+- `tests/`: Python regressions and Node browser-logic smoke test.
+- `enrichment.py`: illustrative feature stubs, not validated implementations.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE).
